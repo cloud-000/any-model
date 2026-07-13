@@ -1,0 +1,15 @@
+{
+    "name": "@any-model/openrouter",
+    "version": "0.0.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@any-model/openai-compat": "workspace:*"
+    },
+    "peerDependencies": {
+        "@any-model/core": "workspace:*",
+        "typescript": "^5"
+    }
+}

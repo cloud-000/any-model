@@ -1,0 +1,14 @@
+{
+    "name": "@any-model/core",
+    "version": "0.0.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "devDependencies": {
+        "@any-model/testing": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}

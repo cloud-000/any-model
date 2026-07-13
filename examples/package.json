@@ -1,0 +1,16 @@
+{
+    "name": "@any-model/examples",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "gemini": "bun run gemini.ts",
+        "hello": "bun run hello.ts",
+        "openai-compatible": "bun run openai-compatible.ts"
+    },
+    "dependencies": {
+        "@any-model/core": "workspace:*",
+        "@any-model/google": "workspace:*",
+        "@any-model/openai-compat": "workspace:*",
+        "@any-model/openrouter": "workspace:*"
+    }
+}

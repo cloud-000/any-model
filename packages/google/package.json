@@ -1,0 +1,14 @@
+{
+    "name": "@any-model/google",
+    "version": "0.0.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@any-model/core": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}
