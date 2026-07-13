@@ -7,6 +7,7 @@
     ],
     "type": "module",
     "scripts": {
+        "example:chatgpt": "bun run --cwd examples chatgpt",
         "example:gemini": "bun run --cwd examples gemini",
         "example:hello": "bun run --cwd examples hello",
         "example:openai-compatible": "bun run --cwd examples openai-compatible",

@@ -8,16 +8,27 @@
         "@types/bun": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "^5.9.3",
       },
     },
     "examples": {
       "name": "@any-model/examples",
       "dependencies": {
+        "@any-model/chatgpt": "workspace:*",
         "@any-model/core": "workspace:*",
         "@any-model/google": "workspace:*",
         "@any-model/openai-compat": "workspace:*",
         "@any-model/openrouter": "workspace:*",
+      },
+    },
+    "packages/chatgpt": {
+      "name": "@any-model/chatgpt",
+      "version": "0.0.0",
+      "dependencies": {
+        "@any-model/core": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
       },
     },
     "packages/core": {
@@ -73,6 +84,8 @@
     },
   },
   "packages": {
+    "@any-model/chatgpt": ["@any-model/chatgpt@workspace:packages/chatgpt"],
+
     "@any-model/core": ["@any-model/core@workspace:packages/core"],
 
     "@any-model/examples": ["@any-model/examples@workspace:examples"],
