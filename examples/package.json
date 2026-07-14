@@ -1,6 +1,7 @@
 {
     "name": "@any-model/examples",
     "private": true,
+    "license": "MIT",
     "type": "module",
     "scripts": {
         "chatgpt": "bun run chatgpt.ts",

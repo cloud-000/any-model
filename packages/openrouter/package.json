@@ -1,15 +1,29 @@
 {
     "name": "@any-model/openrouter",
-    "version": "0.0.0",
+    "version": "0.1.0",
+    "license": "MIT",
     "type": "module",
+    "description": "OpenRouter provider for any-model.",
+    "files": ["dist", "README.md", "LICENSE"],
+    "publishConfig": { "access": "public" },
+    "scripts": {
+        "build": "bun ../../scripts/build.ts",
+        "prepublishOnly": "bun ../../scripts/build.ts"
+    },
     "exports": {
-        ".": "./src/index.ts"
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
     },
     "dependencies": {
-        "@any-model/openai-compat": "workspace:*"
+        "@any-model/openai-compat": "^0.1.0"
+    },
+    "devDependencies": {
+        "@any-model/core": "workspace:^"
     },
     "peerDependencies": {
-        "@any-model/core": "workspace:*",
-        "typescript": "^5"
+        "@any-model/core": "^0.1.0"
     }
 }

@@ -87,6 +87,7 @@ formats and middleware remain on the roadmap. See `AGENTS.md` for the current co
 
 ```bash
 bun install      # install workspace deps
+bun run build    # build publishable packages to dist/
 bun test         # run tests
 bun run typecheck # check all packages with strict TypeScript
 ```

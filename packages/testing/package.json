@@ -1,14 +1,26 @@
 {
     "name": "@any-model/testing",
-    "version": "0.0.0",
+    "version": "0.1.0",
+    "license": "MIT",
     "type": "module",
-    "exports": {
-        ".": "./src/index.ts"
+    "description": "Mock and record-replay providers for testing any-model applications.",
+    "files": ["dist", "README.md", "LICENSE"],
+    "publishConfig": { "access": "public" },
+    "scripts": {
+        "build": "bun ../../scripts/build.ts",
+        "prepublishOnly": "bun ../../scripts/build.ts"
     },
-    "dependencies": {
-        "@any-model/core": "workspace:*"
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
+    },
+    "devDependencies": {
+        "@any-model/core": "workspace:^"
     },
     "peerDependencies": {
-        "typescript": "^5"
+        "@any-model/core": "^0.1.0"
     }
 }

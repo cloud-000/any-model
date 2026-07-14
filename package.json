@@ -1,12 +1,14 @@
 {
     "name": "any-model-workspace",
     "private": true,
+    "license": "MIT",
     "workspaces": [
         "packages/*",
         "examples"
     ],
     "type": "module",
     "scripts": {
+        "build": "bun run scripts/build.ts",
         "example:chatgpt": "bun run --cwd examples chatgpt",
         "example:gemini": "bun run --cwd examples gemini",
         "example:hello": "bun run --cwd examples hello",
@@ -15,9 +17,7 @@
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
-        "@types/bun": "latest"
-    },
-    "peerDependencies": {
+        "@types/bun": "latest",
         "typescript": "^5.9.3"
     }
 }

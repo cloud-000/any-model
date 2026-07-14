@@ -6,8 +6,6 @@
       "name": "any-model-workspace",
       "devDependencies": {
         "@types/bun": "latest",
-      },
-      "peerDependencies": {
         "typescript": "^5.9.3",
       },
     },
@@ -23,63 +21,62 @@
     },
     "packages/chatgpt": {
       "name": "@any-model/chatgpt",
-      "version": "0.0.0",
-      "dependencies": {
-        "@any-model/core": "workspace:*",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "@any-model/core": "^0.1.0",
       },
     },
     "packages/core": {
       "name": "@any-model/core",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "devDependencies": {
-        "@any-model/testing": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
+        "@any-model/testing": "workspace:^",
       },
     },
     "packages/google": {
       "name": "@any-model/google",
-      "version": "0.0.0",
-      "dependencies": {
-        "@any-model/core": "workspace:*",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "@any-model/core": "^0.1.0",
       },
     },
     "packages/openai-compat": {
       "name": "@any-model/openai-compat",
-      "version": "0.0.0",
-      "dependencies": {
-        "@any-model/core": "workspace:*",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "@any-model/core": "^0.1.0",
       },
     },
     "packages/openrouter": {
       "name": "@any-model/openrouter",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
-        "@any-model/openai-compat": "workspace:*",
+        "@any-model/openai-compat": "^0.1.0",
+      },
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
       },
       "peerDependencies": {
-        "@any-model/core": "workspace:*",
-        "typescript": "^5",
+        "@any-model/core": "^0.1.0",
       },
     },
     "packages/testing": {
       "name": "@any-model/testing",
-      "version": "0.0.0",
-      "dependencies": {
-        "@any-model/core": "workspace:*",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "@any-model/core": "^0.1.0",
       },
     },
   },
