@@ -1,9 +1,16 @@
 {
     "name": "@any-model/google",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "type": "module",
     "description": "Google Gemini provider for any-model.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cloud-000/any-model.git",
+        "directory": "packages/google"
+    },
+    "homepage": "https://github.com/cloud-000/any-model#readme",
+    "bugs": { "url": "https://github.com/cloud-000/any-model/issues" },
     "files": ["dist", "README.md", "LICENSE"],
     "publishConfig": { "access": "public" },
     "scripts": {

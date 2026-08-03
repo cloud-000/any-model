@@ -1,9 +1,16 @@
 {
     "name": "@any-model/testing",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "type": "module",
     "description": "Mock and record-replay providers for testing any-model applications.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cloud-000/any-model.git",
+        "directory": "packages/testing"
+    },
+    "homepage": "https://github.com/cloud-000/any-model#readme",
+    "bugs": { "url": "https://github.com/cloud-000/any-model/issues" },
     "files": ["dist", "README.md", "LICENSE"],
     "publishConfig": { "access": "public" },
     "scripts": {

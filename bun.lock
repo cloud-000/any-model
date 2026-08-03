@@ -22,7 +22,7 @@
     },
     "packages/chatgpt": {
       "name": "@any-model/chatgpt",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "@any-model/core": "workspace:^",
       },
@@ -32,7 +32,7 @@
     },
     "packages/core": {
       "name": "@any-model/core",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "@any-model/testing": "workspace:^",
         "zod": "^4",
@@ -43,7 +43,7 @@
     },
     "packages/google": {
       "name": "@any-model/google",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "@any-model/core": "workspace:^",
       },
@@ -53,7 +53,7 @@
     },
     "packages/openai-compat": {
       "name": "@any-model/openai-compat",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "@any-model/core": "workspace:^",
       },
@@ -63,7 +63,7 @@
     },
     "packages/openrouter": {
       "name": "@any-model/openrouter",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@any-model/openai-compat": "^0.1.0",
       },
@@ -76,7 +76,7 @@
     },
     "packages/testing": {
       "name": "@any-model/testing",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "@any-model/core": "workspace:^",
       },
