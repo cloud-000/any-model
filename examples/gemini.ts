@@ -8,7 +8,7 @@ if (!apiKey) {
 }
 
 const ai = createRegistry().use(google({ apiKey }));
-const modelId = process.env.GOOGLE_MODEL_ID ?? "gemma-4-26b-a4b-it";
+const modelId = process.env.GOOGLE_MODEL_ID ?? "google:gemma-4-26b-a4b-it";
 const model = ai.languageModel(modelId);
 
 const result = await model.generate({

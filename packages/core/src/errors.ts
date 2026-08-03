@@ -57,6 +57,17 @@ export class UnsupportedFeatureError extends AnyModelError {
     }
 }
 
+/** The model's tool arguments failed the tool's schema. Not retryable at the model layer —
+ *  a loop should feed it back as ToolResultPart { isError: true } so the model can retry. */
+export class ToolInputError extends AnyModelError {
+    readonly toolName: string;
+
+    constructor(toolName: string, options: AnyModelErrorOptions & { message?: string } = {}) {
+        super(options.message ?? `Invalid arguments for tool "${toolName}"`, options);
+        this.toolName = toolName;
+    }
+}
+
 /** Catch-all for provider/transport errors. Retryable for 5xx / network. */
 export class ProviderError extends AnyModelError {
     override readonly isRetryable: boolean;

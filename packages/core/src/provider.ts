@@ -5,6 +5,7 @@
  * by folding the stream.
  */
 import { foldStream, type StreamPart } from "./stream.ts";
+import { toWireTools } from "./tool.ts";
 import type { Capabilities, GenerateRequest, GenerateResult } from "./types.ts";
 
 export interface LanguageModel {
@@ -35,11 +36,16 @@ export interface LanguageModelSpec {
  * should use this rather than implementing `generate` separately.
  */
 export function createLanguageModel(spec: LanguageModelSpec): LanguageModel {
+    // One sanitizer, not two: generate() is foldStream(doStream(...)), so
+    // sanitizing in both places would strip twice.
+    const toWireRequest = (request: GenerateRequest): GenerateRequest =>
+        request.tools ? { ...request, tools: toWireTools(request.tools) } : request;
+
     return {
         provider: spec.provider,
         modelId: spec.modelId,
         capabilities: spec.capabilities,
-        stream: spec.doStream,
-        generate: (request) => foldStream(spec.doStream(request)),
+        stream: (request) => spec.doStream(toWireRequest(request)),
+        generate: (request) => foldStream(spec.doStream(toWireRequest(request))),
     };
 }

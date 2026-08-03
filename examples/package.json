@@ -7,7 +7,8 @@
         "chatgpt": "bun run chatgpt.ts",
         "gemini": "bun run gemini.ts",
         "hello": "bun run hello.ts",
-        "openai-compatible": "bun run openai-compatible.ts"
+        "openai-compatible": "bun run openai-compatible.ts",
+        "tools": "bun run tools.ts"
     },
     "dependencies": {
         "@any-model/chatgpt": "workspace:*",

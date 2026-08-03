@@ -14,6 +14,7 @@ import {
     type ProviderMetadata,
     type ProviderOptions,
     type StreamPart,
+    type Tool,
     type ToolChoice,
     type Usage,
 } from "@any-model/core";
@@ -147,6 +148,14 @@ async function sendRequest(
     }
 }
 
+/** Per-tool strict override wins; falls back to the request-level default; else omitted. */
+function strictFor(tool: Tool, request: GenerateRequest): boolean | undefined {
+    const perTool = tool.providerOptions?.[CHATGPT_ID]?.strict;
+    if (typeof perTool === "boolean") return perTool;
+    const perRequest = request.providerOptions?.[CHATGPT_ID]?.strict;
+    return typeof perRequest === "boolean" ? perRequest : undefined;
+}
+
 export function makeRequestBody(
     modelId: string,
     request: GenerateRequest,
@@ -168,13 +177,16 @@ export function makeRequestBody(
     if (instructions) body.instructions = instructions;
     if (request.maxOutputTokens !== undefined) body.max_output_tokens = request.maxOutputTokens;
     if (request.tools) {
-        body.tools = request.tools.map((tool) => ({
-            type: "function",
-            name: tool.name,
-            ...(tool.description === undefined ? {} : { description: tool.description }),
-            parameters: tool.inputSchema,
-            strict: true,
-        }));
+        body.tools = request.tools.map((tool) => {
+            const strict = strictFor(tool, request);
+            return {
+                type: "function",
+                name: tool.name,
+                ...(tool.description === undefined ? {} : { description: tool.description }),
+                parameters: tool.inputSchema,
+                ...(strict === undefined ? {} : { strict }),
+            };
+        });
     }
     if (request.toolChoice !== undefined) body.tool_choice = toToolChoice(request.toolChoice);
     const include = Array.isArray(options.include) ? [...options.include] : [];

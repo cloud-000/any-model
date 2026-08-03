@@ -84,7 +84,7 @@ describe("ChatGPT provider", () => {
             max_output_tokens: 123,
             reasoning: { effort: "high" },
             include: ["custom.field", "reasoning.encrypted_content"],
-            tools: [{ type: "function", name: "weather", strict: true }],
+            tools: [{ type: "function", name: "weather" }],
             tool_choice: { type: "function", name: "weather" },
         });
         expect(body.input).toEqual([
@@ -113,6 +113,33 @@ describe("ChatGPT provider", () => {
                 call_id: "call-1",
                 output: '{"temp":72}',
             },
+        ]);
+    });
+
+    test("omits strict by default, honors request-level default and per-tool override", () => {
+        const tools = [
+            { name: "weather", inputSchema: { type: "object" } },
+            {
+                name: "search",
+                inputSchema: { type: "object" },
+                providerOptions: { chatgpt: { strict: false } },
+            },
+        ];
+
+        const defaultBody = makeRequestBody("model", { messages: [], tools });
+        expect(defaultBody.tools).toEqual([
+            { type: "function", name: "weather", parameters: { type: "object" } },
+            { type: "function", name: "search", parameters: { type: "object" }, strict: false },
+        ]);
+
+        const requestLevelBody = makeRequestBody("model", {
+            messages: [],
+            tools,
+            providerOptions: chatGPTOptions({ strict: true }),
+        });
+        expect(requestLevelBody.tools).toEqual([
+            { type: "function", name: "weather", parameters: { type: "object" }, strict: true },
+            { type: "function", name: "search", parameters: { type: "object" }, strict: false },
         ]);
     });
 

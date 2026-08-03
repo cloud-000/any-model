@@ -13,6 +13,7 @@
         "example:gemini": "bun run --cwd examples gemini",
         "example:hello": "bun run --cwd examples hello",
         "example:openai-compatible": "bun run --cwd examples openai-compatible",
+        "example:tools": "bun run --cwd examples tools",
         "test": "bun test",
         "typecheck": "tsc --noEmit"
     },

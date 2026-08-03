@@ -42,3 +42,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 CLAUDE.md
 AGENTS.md
 GEMINI.md
+llms.txt
+tmp/

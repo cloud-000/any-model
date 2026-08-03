@@ -96,6 +96,42 @@ export interface Tool {
     description?: string;
     /** JSON Schema for the tool's arguments. */
     inputSchema: JSONSchema;
+    /**
+     * Per-tool provider escape hatch, e.g. `{ chatgpt: { strict: true } }`.
+     * Mirrors GenerateRequest.providerOptions, scoped to one tool.
+     */
+    providerOptions?: ProviderOptions;
+    /**
+     * Never present. Declared so a ToolDefinition cannot be passed where a wire
+     * Tool is expected — strip it with toWireTools() instead.
+     */
+    execute?: never;
+}
+
+/** The wire fields of `Tool`, without the anti-leak guard. */
+export type WireTool = Omit<Tool, "execute">;
+
+export interface ToolDefinition<Result = unknown> extends WireTool {
+    /** Called with the model's raw args; validation (if any) runs inside. */
+    execute(rawArgs: unknown, ctx: ToolExecutionContext): Promise<Result>;
+}
+
+/** Schema-library-agnostic seam. Populated by a per-library helper, e.g. `fromZod()`. */
+export interface SchemaAdapter<T = unknown> {
+    jsonSchema: JSONSchema;
+    /** Throws/rejects on invalid input. Async to allow Zod refinements etc. */
+    parse(input: unknown): T | Promise<T>;
+}
+
+export interface ToolExecutionContext {
+    toolCallId: string;
+    /** Conversation so far. See Open questions for what "so far" includes. */
+    messages: readonly Message[];
+    /** Propagated from GenerateRequest.abortSignal. */
+    abortSignal?: AbortSignal;
+    /** Request-scoped DI slot (DB handle, tenant id). Hand-constructed by the loop
+     *  author; nothing in core populates it. Cast at the use site for now. */
+    context?: unknown;
 }
 
 export type ToolChoice = "auto" | "none" | "required" | { type: "tool"; toolName: string };
