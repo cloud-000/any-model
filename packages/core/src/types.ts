@@ -116,12 +116,57 @@ export interface ToolDefinition<Result = unknown> extends WireTool {
     execute(rawArgs: unknown, ctx: ToolExecutionContext): Promise<Result>;
 }
 
-/** Schema-library-agnostic seam. Populated by a per-library helper, e.g. `fromZod()`. */
+/**
+ * Explicit seam for supplying a JSON Schema plus a validator by hand. The normal
+ * path is to pass a schema library's object straight to `tool()`; this exists for
+ * raw JSON Schema with custom validation, or libraries `tool()` can't convert.
+ */
 export interface SchemaAdapter<T = unknown> {
     jsonSchema: JSONSchema;
-    /** Throws/rejects on invalid input. Async to allow Zod refinements etc. */
+    /** Throws/rejects on invalid input. Async to allow refinements etc. */
     parse(input: unknown): T | Promise<T>;
 }
+
+// ---------------------------------------------------------------------------
+// Standard Schema (https://standardschema.dev)
+// ---------------------------------------------------------------------------
+
+/**
+ * The Standard Schema v1 interface, declared structurally rather than depended
+ * upon so core stays dependency-free here. Zod, Valibot, ArkType and others
+ * implement this, which gives `tool()` type inference and runtime validation
+ * for any of them without knowing which one it received.
+ */
+export interface StandardSchemaV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardSchemaProps<Input, Output>;
+}
+
+export interface StandardSchemaProps<Input = unknown, Output = Input> {
+    readonly version: 1;
+    /** Library identifier, e.g. "zod" / "valibot" / "arktype". */
+    readonly vendor: string;
+    readonly validate: (
+        value: unknown,
+    ) => StandardSchemaResult<Output> | Promise<StandardSchemaResult<Output>>;
+    /** Phantom field carrying the inferred types; never present at runtime. */
+    readonly types?: { readonly input: Input; readonly output: Output } | undefined;
+    /**
+     * Proposed spec extension letting a schema convert itself to JSON Schema.
+     * Libraries that implement it need no special-casing in `tool()`.
+     */
+    readonly jsonSchema?: {
+        input(options?: unknown): JSONSchema;
+        output(options?: unknown): JSONSchema;
+    } | undefined;
+}
+
+export type StandardSchemaResult<Output> =
+    | { readonly value: Output; readonly issues?: undefined }
+    | { readonly issues: ReadonlyArray<{ readonly message: string }> };
+
+/** The output type a Standard Schema produces after validation. */
+export type InferStandardSchema<S> = S extends StandardSchemaV1<unknown, infer Output> ? Output
+    : never;
 
 export interface ToolExecutionContext {
     toolCallId: string;

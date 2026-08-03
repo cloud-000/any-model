@@ -18,15 +18,21 @@ for (const packageDir of packageDirs) {
     const packageJson = await Bun.file(join(packageDir, "package.json")).json() as {
         name?: string;
         private?: boolean;
+        peerDependencies?: Record<string, string>;
     };
 
     if (packageJson.private) continue;
 
     const entrypoint = join(packageDir, "src", "index.ts");
     const dist = join(packageDir, "dist");
-    const externals = packageJson.name === "@any-model/core"
-        ? []
-        : ["@any-model/core", "@any-model/openai-compat"];
+    // Peer dependencies must be external: bundling them would inline a second
+    // copy into dist, defeating the point of resolving to the host app's install.
+    const externals = [
+        ...Object.keys(packageJson.peerDependencies ?? {}),
+        ...(packageJson.name === "@any-model/core"
+            ? []
+            : ["@any-model/core", "@any-model/openai-compat"]),
+    ];
 
     await rm(dist, { recursive: true, force: true });
 

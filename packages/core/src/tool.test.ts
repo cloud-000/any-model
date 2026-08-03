@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { ToolInputError } from "./errors.ts";
+import { z } from "zod";
+import { ToolInputError, UnsupportedFeatureError } from "./errors.ts";
 import { tool, toWireTools } from "./tool.ts";
 import type {
     SchemaAdapter,
+    StandardSchemaV1,
     Tool,
     ToolDefinition,
     ToolExecutionContext,
@@ -10,6 +12,104 @@ import type {
 } from "./types.ts";
 
 const ctx: ToolExecutionContext = { toolCallId: "call-1", messages: [] };
+
+describe("tool() with a Standard Schema", () => {
+    test("derives the wire JSON Schema from a Zod schema", () => {
+        const weather = tool({
+            name: "weather",
+            inputSchema: z.object({
+                city: z.string().describe("City name"),
+                units: z.enum(["c", "f"]).optional(),
+            }),
+            execute: ({ city }) => city,
+        });
+
+        expect(weather.inputSchema).toMatchObject({
+            type: "object",
+            properties: {
+                city: { type: "string", description: "City name" },
+                units: { type: "string", enum: ["c", "f"] },
+            },
+            required: ["city"],
+        });
+    });
+
+    test("validates and coerces args before execute runs", async () => {
+        let seen: { city: string; units: "c" | "f" } | undefined;
+        const weather = tool({
+            name: "weather",
+            inputSchema: z.object({ city: z.string(), units: z.enum(["c", "f"]).default("c") }),
+            execute: (args) => {
+                seen = args;
+                return "ok";
+            },
+        });
+
+        await weather.execute({ city: "LA" }, ctx);
+        expect(seen).toEqual({ city: "LA", units: "c" });
+    });
+
+    // Standard Schema signals failure by *returning* `issues` rather than
+    // throwing; without an explicit check invalid args reach execute as undefined.
+    test("invalid args throw ToolInputError without invoking execute", async () => {
+        let called = false;
+        const weather = tool({
+            name: "weather",
+            inputSchema: z.object({ city: z.string() }),
+            execute: () => {
+                called = true;
+                return "ok";
+            },
+        });
+
+        await expect(weather.execute({ city: 42 }, ctx)).rejects.toThrow(ToolInputError);
+        expect(called).toBe(false);
+    });
+
+    // A Zod schema has its own `.parse`, so an adapter check that only looked for
+    // `parse` would classify it as a SchemaAdapter and read `undefined` for the
+    // wire schema — a tool silently advertising no parameters.
+    test("a schema's own parse() does not get mistaken for a SchemaAdapter", () => {
+        const weather = tool({
+            name: "weather",
+            inputSchema: z.object({ city: z.string() }),
+            execute: ({ city }) => city,
+        });
+
+        expect(weather.inputSchema).toBeDefined();
+        expect(weather.inputSchema.type).toBe("object");
+    });
+
+    test("a vendor with no JSON Schema conversion throws UnsupportedFeatureError", () => {
+        const opaque: StandardSchemaV1<unknown, { a: string }> = {
+            "~standard": {
+                version: 1,
+                vendor: "some-other-library",
+                validate: (value) => ({ value: value as { a: string } }),
+            },
+        };
+
+        expect(() => tool({ name: "opaque", inputSchema: opaque, execute: () => "ok" }))
+            .toThrow(UnsupportedFeatureError);
+    });
+
+    test("the jsonSchema extension is preferred over vendor special-casing", () => {
+        const selfDescribing: StandardSchemaV1<unknown, { a: string }> = {
+            "~standard": {
+                version: 1,
+                vendor: "some-other-library",
+                validate: (value) => ({ value: value as { a: string } }),
+                jsonSchema: {
+                    input: () => ({ type: "object", properties: { a: { type: "string" } } }),
+                    output: () => ({ type: "object" }),
+                },
+            },
+        };
+
+        const t = tool({ name: "self", inputSchema: selfDescribing, execute: ({ a }) => a });
+        expect(t.inputSchema).toEqual({ type: "object", properties: { a: { type: "string" } } });
+    });
+});
 
 describe("tool()", () => {
     test("plain JSON Schema tools pass args through untouched", async () => {

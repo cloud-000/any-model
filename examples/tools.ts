@@ -1,41 +1,26 @@
 import {
-    createRegistry,
     tool,
     ToolInputError,
     toWireTools,
     type Message,
-    type SchemaAdapter,
     type ToolResultPart,
 } from "@any-model/core";
+import { z } from "zod";
 import { model } from "./test-model";
 
-// A SchemaAdapter is the one seam that gives `tool()` both a JSON Schema (for
-// the wire) and a typed, runtime-validated `parse()` (for `execute`) from a
-// single definition — no `<Args>` generic to keep in sync by hand. A real app
-// would generate this from Zod or another schema library instead of
-// hand-writing `parse`; see `fromZod()` in the tool-calling spec.
-const cityArgs: SchemaAdapter<{ city: string }> = {
-    jsonSchema: {
-        type: "object",
-        properties: { city: { type: "string" } },
-        required: ["city"],
-        additionalProperties: false,
-    },
-    parse: (input) => {
-        const city = (input as { city?: unknown } | null)?.city;
-        if (typeof city !== "string") throw new Error("city must be a string");
-        return { city };
-    },
-};
-
-// A tool with real executable logic (`execute` closes over whatever the app
-// needs — here, nothing more than a stand-in for a weather API call). Only
-// `toWireTools()`'s output — name/description/inputSchema — ever reaches the
-// provider; `execute` cannot leak across that boundary even by accident.
+// The schema is declared once. `tool()` derives all three things it needs from
+// it: the JSON Schema sent to the provider, the runtime validation that guards
+// `execute`, and the argument type `{ city: string }` inferred below — nothing
+// to keep in sync by hand. Any Standard Schema library works here (Zod, Valibot, ArkType); `SchemaAdapter` remains for raw JSON Schema.
+// `execute` closes over whatever the app needs — here, a stand-in for a weather
+// API call. Only `toWireTools()`'s output — name/description/inputSchema — ever
+// reaches the provider; `execute` cannot leak across that boundary by accident.
 const getWeather = tool({
     name: "get_weather",
     description: "Get the current weather for a city.",
-    inputSchema: cityArgs,
+    inputSchema: z.object({
+        city: z.string().describe("City name, e.g. San Francisco"),
+    }),
     execute: ({ city }) => {
         return {
             city,

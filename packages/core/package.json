@@ -5,7 +5,9 @@
     "type": "module",
     "description": "Provider-independent types, streaming, registry, middleware, and errors for any-model.",
     "files": ["dist", "README.md", "LICENSE"],
-    "publishConfig": { "access": "public" },
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "bun ../../scripts/build.ts",
         "prepublishOnly": "bun ../../scripts/build.ts"
@@ -17,7 +19,11 @@
             "default": "./dist/index.js"
         }
     },
+    "peerDependencies": {
+        "zod": "^4"
+    },
     "devDependencies": {
-        "@any-model/testing": "workspace:^"
+        "@any-model/testing": "workspace:^",
+        "zod": "^4"
     }
 }
