@@ -6,6 +6,7 @@ const cwd = resolve(process.cwd());
 const packageDirs = cwd === root
     ? [
         "core",
+        "agent",
         "openai-compat",
         "testing",
         "google",

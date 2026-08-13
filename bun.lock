@@ -12,12 +12,24 @@
     "examples": {
       "name": "@any-model/examples",
       "dependencies": {
+        "@any-model/agent": "workspace:*",
         "@any-model/chatgpt": "workspace:*",
         "@any-model/core": "workspace:*",
         "@any-model/google": "workspace:*",
         "@any-model/openai-compat": "workspace:*",
         "@any-model/openrouter": "workspace:*",
         "zod": "^4",
+      },
+    },
+    "packages/agent": {
+      "name": "@any-model/agent",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@any-model/core": "workspace:^",
+        "@any-model/testing": "workspace:^",
+      },
+      "peerDependencies": {
+        "@any-model/core": "^0.1.0",
       },
     },
     "packages/chatgpt": {
@@ -86,6 +98,8 @@
     },
   },
   "packages": {
+    "@any-model/agent": ["@any-model/agent@workspace:packages/agent"],
+
     "@any-model/chatgpt": ["@any-model/chatgpt@workspace:packages/chatgpt"],
 
     "@any-model/core": ["@any-model/core@workspace:packages/core"],

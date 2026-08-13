@@ -26,6 +26,7 @@ export interface OpenAIChatCompletionChunk {
         delta?: {
             content?: string | null;
             reasoning_content?: string | null;
+            reasoning?: string | null;
             tool_calls?: OpenAIToolCallDelta[];
         };
         finish_reason?: string | null;

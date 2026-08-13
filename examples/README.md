@@ -15,6 +15,8 @@ bun run example:hello
 bun run example:gemini
 bun run example:openai-compatible
 bun run example:tools
+bun run example:agent
+bun run example:agent-hooks
 ```
 
 The OpenRouter example defaults to `openrouter:openrouter/auto`, while the Google example
@@ -32,3 +34,13 @@ a small hand-rolled loop that runs a tool's `execute` locally and feeds the resu
 the model as a `ToolResultPart` until it stops asking for tools (or `maxSteps` is hit). The
 agent loop itself isn't part of `@any-model/core` by design, so this is one way to write it,
 not the only way.
+
+The agent example (`agent.ts`) uses `runAgent()` from `@any-model/agent` for a normalized
+version of that loop. It returns a complete transcript, per-step model and tool results,
+accumulated usage, and a stop reason. Unlike the tools example's demonstration fallback,
+the agent package intentionally executes only native normalized tool calls; parsing tool
+syntax from model text is an opt-in compatibility concern.
+
+The hooks example (`agent-hooks.ts`) adds reusable request policy and lifecycle logging,
+plus a stateful tool-call limit implemented with `createRun()`. The factory gives every
+invocation its own counter, so the same extension can be used safely by concurrent runs.

@@ -170,7 +170,7 @@ export type InferStandardSchema<S> = S extends StandardSchemaV1<unknown, infer O
 
 export interface ToolExecutionContext {
     toolCallId: string;
-    /** Conversation so far. See Open questions for what "so far" includes. */
+    /** Conversation through the assistant message containing this call, before its results. */
     messages: readonly Message[];
     /** Propagated from GenerateRequest.abortSignal. */
     abortSignal?: AbortSignal;

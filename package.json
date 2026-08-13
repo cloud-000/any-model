@@ -9,6 +9,8 @@
     "type": "module",
     "scripts": {
         "build": "bun run scripts/build.ts",
+        "example:agent": "bun run --cwd examples agent",
+        "example:agent-hooks": "bun run --cwd examples agent-hooks",
         "example:chatgpt": "bun run --cwd examples chatgpt",
         "example:gemini": "bun run --cwd examples gemini",
         "example:hello": "bun run --cwd examples hello",

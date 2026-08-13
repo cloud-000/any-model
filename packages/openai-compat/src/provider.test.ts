@@ -123,6 +123,7 @@ describe("streaming", () => {
         const events = [
             ": keepalive\r\n\r\n",
             event({ choices: [{ delta: { reasoning_content: "think " }, finish_reason: null }] }),
+            event({ choices: [{ delta: { reasoning: "again" }, finish_reason: null }] }),
             event({ choices: [{ delta: { content: "Hi" }, finish_reason: null }] }),
             event({
                 choices: [
@@ -173,7 +174,7 @@ describe("streaming", () => {
         const result = await model.generate({ messages: [{ role: "user", content: "hello" }] });
 
         expect(result.text).toBe("Hi");
-        expect(result.content[0]).toEqual({ type: "reasoning", text: "think " });
+        expect(result.content[0]).toEqual({ type: "reasoning", text: "think again" });
         expect(result.toolCalls[0]).toMatchObject({
             toolCallId: "call_1",
             toolName: "lookup",

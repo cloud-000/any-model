@@ -6,6 +6,7 @@ import {
     type ToolResultPart,
 } from "@any-model/core";
 import { z } from "zod";
+import { parseTextToolCalls } from "./parse-text-tool-calls";
 import { model } from "./test-model";
 
 // The schema is declared once. `tool()` derives all three things it needs from
@@ -42,13 +43,21 @@ for (let step = 0; step < maxSteps; step++) {
     const result = await model.generate({ messages, tools: wireTools });
 
     if (result.text) console.log(result.text);
-    if (result.finishReason !== "tool-calls") break;
+
+    // Some models emit native tool calls (finishReason === "tool-calls" & result.toolCalls populated),
+    // while others output tool call syntax in plain text. Check both.
+    let toolCalls = result.toolCalls;
+    if (toolCalls.length === 0 && result.text) {
+        toolCalls = parseTextToolCalls(result.text);
+    }
+
+    if (toolCalls.length === 0) break;
 
     messages.push({ role: "assistant", content: result.content });
     console.log(result.content);
 
     const toolResults: ToolResultPart[] = await Promise.all(
-        result.toolCalls.map(async (call): Promise<ToolResultPart> => {
+        toolCalls.map(async (call): Promise<ToolResultPart> => {
             const matched = tools.find((t) => t.name === call.toolName);
             if (!matched) {
                 return {

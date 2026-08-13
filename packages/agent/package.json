@@ -1,0 +1,34 @@
+{
+    "name": "@any-model/agent",
+    "version": "0.1.0",
+    "license": "MIT",
+    "type": "module",
+    "description": "A small, extensible tool-calling loop for any-model language models.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cloud-000/any-model.git",
+        "directory": "packages/agent"
+    },
+    "homepage": "https://github.com/cloud-000/any-model#readme",
+    "bugs": { "url": "https://github.com/cloud-000/any-model/issues" },
+    "files": ["dist", "README.md", "LICENSE"],
+    "publishConfig": { "access": "public" },
+    "scripts": {
+        "build": "bun ../../scripts/build.ts",
+        "prepublishOnly": "bun ../../scripts/build.ts"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
+    },
+    "devDependencies": {
+        "@any-model/core": "workspace:^",
+        "@any-model/testing": "workspace:^"
+    },
+    "peerDependencies": {
+        "@any-model/core": "^0.1.0"
+    }
+}

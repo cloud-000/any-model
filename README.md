@@ -64,6 +64,7 @@ capability quirks. `any-model` does it once, with two goals:
 | Package                    | Purpose                                                                               |
 | -------------------------- | ------------------------------------------------------------------------------------- |
 | `@any-model/core`          | Types, registry, `StreamPart`, middleware, error taxonomy. No provider deps.          |
+| `@any-model/agent`         | Small extensible model/tool loop with steps, hooks, limits, and usage aggregation.     |
 | `@any-model/openai-compat` | Base for all OpenAI-shaped endpoints (Groq, Together, DeepSeek, Ollama, vLLM, local). |
 | `@any-model/chatgpt`       | Experimental ChatGPT OAuth + Codex-compatible subscription provider.               |
 | `@any-model/anthropic`     | Anthropic Messages API.                                                               |
@@ -77,8 +78,8 @@ capability quirks. `any-model` does it once, with two goals:
 
 ## Status
 
-The core contract, testing provider, OpenAI-compatible HTTP provider, OpenRouter, Google,
-and the experimental ChatGPT OAuth provider are implemented. The ChatGPT package follows
+The core contract, agent loop, testing provider, OpenAI-compatible HTTP provider, OpenRouter,
+Google, and the experimental ChatGPT OAuth provider are implemented. The ChatGPT package follows
 Codex client wire details rather than a stable public OpenAI Platform API contract, so its
 OAuth and inference endpoints may change without notice. Additional native provider wire
 formats and middleware remain on the roadmap. See `AGENTS.md` for the current conventions.

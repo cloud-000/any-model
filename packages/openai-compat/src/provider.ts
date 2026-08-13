@@ -317,8 +317,8 @@ async function* normalizeChunks(
         if (chunk.usage) usage = mapUsage(chunk.usage);
         for (const choice of chunk.choices ?? []) {
             const delta = choice.delta;
-            if (delta?.reasoning_content)
-                yield { type: "reasoning-delta", text: delta.reasoning_content };
+            const reasoning = delta?.reasoning_content || delta?.reasoning;
+            if (reasoning) yield { type: "reasoning-delta", text: reasoning };
             if (delta?.content) yield { type: "text-delta", text: delta.content };
             for (const toolDelta of delta?.tool_calls ?? []) {
                 yield* normalizeToolDelta(tools, toolDelta);

@@ -4,6 +4,8 @@
     "license": "MIT",
     "type": "module",
     "scripts": {
+        "agent": "bun run agent.ts",
+        "agent-hooks": "bun run agent-hooks.ts",
         "chatgpt": "bun run chatgpt.ts",
         "gemini": "bun run gemini.ts",
         "hello": "bun run hello.ts",
@@ -11,6 +13,7 @@
         "tools": "bun run tools.ts"
     },
     "dependencies": {
+        "@any-model/agent": "workspace:*",
         "@any-model/chatgpt": "workspace:*",
         "@any-model/core": "workspace:*",
         "@any-model/google": "workspace:*",
