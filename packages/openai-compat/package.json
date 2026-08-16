@@ -1,6 +1,6 @@
 {
     "name": "@any-model/openai-compat",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "license": "MIT",
     "type": "module",
     "description": "OpenAI Chat Completions-compatible provider for any-model.",

@@ -44,7 +44,7 @@
     },
     "packages/core": {
       "name": "@any-model/core",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "devDependencies": {
         "@any-model/testing": "workspace:^",
         "zod": "^4",
@@ -65,7 +65,7 @@
     },
     "packages/openai-compat": {
       "name": "@any-model/openai-compat",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "devDependencies": {
         "@any-model/core": "workspace:^",
       },
