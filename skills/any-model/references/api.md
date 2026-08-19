@@ -10,6 +10,8 @@ class Registry {
     use(provider: Provider): this;          // later registration of same id overrides
     provider(id: string): Provider;         // throws, listing registered ids
     languageModel(id: string): LanguageModel; // "providerId:modelId"
+    listModels(options?: ListModelsOptions): Promise<readonly ModelInfo[]>;
+    listModels(providerId: string, options?: ListModelsOptions): Promise<readonly ModelInfo[]>;
     providerIds(): string[];
 }
 function createRegistry(): Registry;
@@ -19,12 +21,32 @@ function createRegistry(): Registry;
 `"local:qwen3:8b"` resolves provider `local`, model `qwen3:8b`. Ids without a separator, or
 with nothing on either side, throw.
 
+`listModels(providerId)` calls that provider (unknown id throws). `listModels()` concatenates
+every registered provider; `UnsupportedFeatureError` is skipped so a provider with no list
+API does not poison a multi-provider registry. Any other error fails the call.
+`languageModel()` stays unvalidated — listing is discovery, not a gate.
+
 ## Provider contract
 
 ```ts
 interface Provider {
     readonly id: string;                       // the prefix in "providerId:modelId"
     languageModel(modelId: string): LanguageModel;
+    listModels(options?: ListModelsOptions): Promise<readonly ModelInfo[]>;
+}
+
+interface ListModelsOptions {
+    abortSignal?: AbortSignal;
+    headers?: Record<string, string>;
+}
+
+interface ModelInfo {
+    provider: string;   // prefix in "providerId:modelId"
+    id: string;         // pass to languageModel(); no prefix
+    name?: string;
+    ownedBy?: string;
+    created?: number;   // unix seconds, if the vendor sends it
+    raw?: unknown;      // untranslated vendor object
 }
 
 interface LanguageModel {
@@ -43,9 +65,14 @@ interface LanguageModelSpec {
 }
 
 function createLanguageModel(spec: LanguageModelSpec): LanguageModel;
+function unsupportedListModels(provider: string): Provider["listModels"];
 ```
 
 `createLanguageModel` wires `stream = doStream` and `generate = foldStream(doStream(...))`.
+Providers that have no list API should use `unsupportedListModels(id)` rather than omitting
+the method. Round-trip a listed row with `` languageModel(`${info.provider}:${info.id}`) ``.
+Vendor extras (pricing, token limits) stay in `ModelInfo.raw` — do not fold them into
+capabilities. The static models.dev catalog is a separate, later package.
 
 ## Messages and content parts
 

@@ -154,10 +154,12 @@ export interface StandardSchemaProps<Input = unknown, Output = Input> {
      * Proposed spec extension letting a schema convert itself to JSON Schema.
      * Libraries that implement it need no special-casing in `tool()`.
      */
-    readonly jsonSchema?: {
-        input(options?: unknown): JSONSchema;
-        output(options?: unknown): JSONSchema;
-    } | undefined;
+    readonly jsonSchema?:
+        | {
+              input(options?: unknown): JSONSchema;
+              output(options?: unknown): JSONSchema;
+          }
+        | undefined;
 }
 
 export type StandardSchemaResult<Output> =
@@ -165,8 +167,8 @@ export type StandardSchemaResult<Output> =
     | { readonly issues: ReadonlyArray<{ readonly message: string }> };
 
 /** The output type a Standard Schema produces after validation. */
-export type InferStandardSchema<S> = S extends StandardSchemaV1<unknown, infer Output> ? Output
-    : never;
+export type InferStandardSchema<S> =
+    S extends StandardSchemaV1<unknown, infer Output> ? Output : never;
 
 export interface ToolExecutionContext {
     toolCallId: string;
@@ -262,4 +264,34 @@ export interface Capabilities {
     jsonSchema: boolean;
     reasoning: boolean;
     promptCaching: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Live model listing
+// ---------------------------------------------------------------------------
+
+/** Options for live model listing on a provider or registry. */
+export interface ListModelsOptions {
+    abortSignal?: AbortSignal;
+    /** Extra HTTP headers merged into the vendor list request, if applicable. */
+    headers?: Record<string, string>;
+}
+
+/**
+ * A model the vendor currently reports as available. Thin on purpose: pricing,
+ * context windows, and modalities belong in the catalog package, not here.
+ * Round-trip by passing `"${provider}:${id}"` to `languageModel()`.
+ */
+export interface ModelInfo {
+    /** Provider id — the prefix in `"providerId:modelId"`. */
+    provider: string;
+    /** Model id you'd pass to `languageModel()`; no provider prefix. */
+    id: string;
+    /** Human-readable name when the vendor supplies one. */
+    name?: string;
+    ownedBy?: string;
+    /** Unix seconds, when the vendor supplies it. */
+    created?: number;
+    /** Untranslated vendor payload. */
+    raw?: unknown;
 }

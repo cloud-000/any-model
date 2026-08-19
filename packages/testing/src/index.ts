@@ -1,12 +1,13 @@
 /**
  * A mock provider for tests — no network. Scriptable per request, or fed a
  * fixed string / list of {@link StreamPart}s. Also the reference example of how
- * little a provider needs to implement: just `doStream`.
+ * little a provider needs to implement: `doStream` plus `listModels`.
  */
 import {
     createLanguageModel,
     type Capabilities,
     type GenerateRequest,
+    type ModelInfo,
     type Provider,
     type StreamPart,
 } from "@any-model/core";
@@ -21,6 +22,11 @@ export interface MockProviderConfig {
      * last user text (or a canned greeting).
      */
     respond?: (request: GenerateRequest, modelId: string) => MockResponse | Promise<MockResponse>;
+    /**
+     * Models `listModels()` returns. Strings become `{ provider, id }`.
+     * Defaults to `[{ id: "echo" }]`. `provider` is always the mock's id.
+     */
+    models?: Array<string | Omit<ModelInfo, "provider">>;
 }
 
 const ALL_CAPABILITIES: Capabilities = {
@@ -36,6 +42,9 @@ export function mockProvider(config: MockProviderConfig = {}): Provider {
     const id = config.id ?? "mock";
     const capabilities = { ...ALL_CAPABILITIES, ...config.capabilities };
     const respond = config.respond ?? defaultRespond;
+    const models = (config.models ?? [{ id: "echo" }]).map((model): ModelInfo =>
+        typeof model === "string" ? { provider: id, id: model } : { ...model, provider: id },
+    );
 
     return {
         id,
@@ -47,6 +56,7 @@ export function mockProvider(config: MockProviderConfig = {}): Provider {
                 doStream: (request) => streamFrom(Promise.resolve(respond(request, modelId))),
             });
         },
+        listModels: async () => models,
     };
 }
 

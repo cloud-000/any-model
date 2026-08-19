@@ -349,6 +349,73 @@ describe("HTTP errors", () => {
     });
 });
 
+describe("listModels", () => {
+    test("strips models/ prefixes and follows a next page", async () => {
+        const urls: string[] = [];
+        const provider = google({
+            apiKey: "secret",
+            baseURL: "https://example.test/v1beta/",
+            headers: { "x-scope": "config" },
+            fetch: async (url, init) => {
+                urls.push(String(url));
+                const parsed = new URL(String(url));
+                if (!parsed.searchParams.get("pageToken")) {
+                    expect(init?.headers).toMatchObject({
+                        "x-goog-api-key": "secret",
+                        "x-scope": "request",
+                    });
+                    return Response.json({
+                        models: [
+                            {
+                                name: "models/gemini-2.5-flash",
+                                displayName: "Gemini 2.5 Flash",
+                                inputTokenLimit: 1,
+                            },
+                            { displayName: "skip me" },
+                        ],
+                        nextPageToken: "page-2",
+                    });
+                }
+                return Response.json({
+                    models: [{ name: "gemini-embedding-001" }],
+                });
+            },
+        });
+
+        const models = await provider.listModels({ headers: { "x-scope": "request" } });
+        expect(urls).toEqual([
+            "https://example.test/v1beta/models?pageSize=1000",
+            "https://example.test/v1beta/models?pageSize=1000&pageToken=page-2",
+        ]);
+        expect(models).toEqual([
+            {
+                provider: "google",
+                id: "gemini-2.5-flash",
+                name: "Gemini 2.5 Flash",
+                raw: {
+                    name: "models/gemini-2.5-flash",
+                    displayName: "Gemini 2.5 Flash",
+                    inputTokenLimit: 1,
+                },
+            },
+            {
+                provider: "google",
+                id: "gemini-embedding-001",
+                raw: { name: "gemini-embedding-001" },
+            },
+        ]);
+    });
+
+    test("maps authentication failures", async () => {
+        const provider = google({
+            apiKey: "x",
+            fetch: async () =>
+                new Response(JSON.stringify({ error: { message: "bad key" } }), { status: 401 }),
+        });
+        await expect(provider.listModels()).rejects.toBeInstanceOf(AuthError);
+    });
+});
+
 function modelReturning(response: Response) {
     return google({ apiKey: "x", fetch: async () => response }).languageModel("m");
 }

@@ -39,3 +39,15 @@ export interface GoogleInteractionEvent {
     error?: GoogleApiError;
     [key: string]: unknown;
 }
+
+export interface GoogleModel {
+    name?: string;
+    displayName?: string;
+    [key: string]: unknown;
+}
+
+export interface GoogleListModelsResponse {
+    models?: GoogleModel[];
+    nextPageToken?: string;
+    [key: string]: unknown;
+}

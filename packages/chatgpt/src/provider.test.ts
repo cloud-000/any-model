@@ -23,6 +23,21 @@ describe("ChatGPT provider", () => {
         });
     });
 
+    test("listModels throws UnsupportedFeatureError", async () => {
+        const provider = chatGPT({
+            credentialStore: validStore(),
+            fetch: async () => new Response("data: [DONE]\n\n"),
+        });
+        try {
+            await provider.listModels();
+            throw new Error("expected rejection");
+        } catch (error) {
+            expect(error).toBeInstanceOf(UnsupportedFeatureError);
+            expect((error as UnsupportedFeatureError).feature).toBe("listModels");
+            expect((error as UnsupportedFeatureError).provider).toBe("chatgpt");
+        }
+    });
+
     test("translates messages, images, reasoning replay, tools, and protected fields", () => {
         const body = makeRequestBody("gpt-test", {
             messages: [

@@ -1,6 +1,6 @@
 {
     "name": "@any-model/core",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "license": "MIT",
     "type": "module",
     "description": "Provider-independent types, streaming, registry, middleware, and errors for any-model.",

@@ -103,6 +103,38 @@ describe("OpenRouter provider", () => {
             user: "stable-user",
         });
     });
+
+    test("listModels hits /models with Bearer and attribution headers", async () => {
+        let captured: { url?: string; init?: RequestInit } = {};
+        const models = await openRouter({
+            apiKey: "secret",
+            appURL: "https://app.test",
+            appName: "Any Model",
+            appCategories: ["developer-tools"],
+            fetch: async (url, init) => {
+                captured = { url: String(url), init };
+                return Response.json({
+                    data: [{ id: "anthropic/claude-test", name: "Claude Test" }],
+                });
+            },
+        }).listModels();
+
+        expect(captured.url).toBe("https://openrouter.ai/api/v1/models");
+        expect(captured.init?.headers).toMatchObject({
+            authorization: "Bearer secret",
+            "HTTP-Referer": "https://app.test",
+            "X-OpenRouter-Title": "Any Model",
+            "X-OpenRouter-Categories": "developer-tools",
+        });
+        expect(models).toEqual([
+            {
+                provider: "openrouter",
+                id: "anthropic/claude-test",
+                name: "Claude Test",
+                raw: { id: "anthropic/claude-test", name: "Claude Test" },
+            },
+        ]);
+    });
 });
 
 async function doneFetch() {

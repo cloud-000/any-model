@@ -39,3 +39,18 @@ export interface OpenAIChatCompletionChunk {
         prompt_tokens_details?: { cached_tokens?: number };
     } | null;
 }
+
+export interface OpenAIModel {
+    id?: string;
+    object?: string;
+    created?: number;
+    owned_by?: string;
+    name?: string;
+    [key: string]: unknown;
+}
+
+export interface OpenAIModelsListResponse {
+    object?: string;
+    data?: OpenAIModel[];
+    [key: string]: unknown;
+}

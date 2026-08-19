@@ -18,8 +18,8 @@ createRegistry().use(provider(config))   →  register providers explicitly
     .generate(request) →  Promise<GenerateResult>    ← core-derived: foldStream(stream)
 ```
 
-A provider implements exactly one method, `doStream`. Everything else — non-streaming
-generation, result folding, tool-call merging — comes from core.
+A provider implements `doStream` (from which `stream` / `generate` are derived) and
+`listModels()` (live vendor listing, or `unsupportedListModels(id)` when the vendor has none).
 
 ## Six rules that are not negotiable
 

@@ -265,6 +265,92 @@ describe("HTTP errors", () => {
     });
 });
 
+describe("listModels", () => {
+    test("GETs {baseURL}/models and maps data rows", async () => {
+        let captured: { url?: string; init?: RequestInit } = {};
+        const provider = openAICompatible({
+            id: "local",
+            baseURL: "https://example.test/v1/",
+            apiKey: "secret",
+            headers: { "x-scope": "config" },
+            fetch: async (url, init) => {
+                captured = { url: String(url), init };
+                return Response.json({
+                    data: [
+                        {
+                            id: "gpt-test",
+                            name: "GPT Test",
+                            owned_by: "openai",
+                            created: 1_700_000_000,
+                            extra: true,
+                        },
+                        { object: "model" },
+                    ],
+                });
+            },
+        });
+
+        const models = await provider.listModels({ headers: { "x-scope": "request" } });
+        expect(captured.url).toBe("https://example.test/v1/models");
+        expect(captured.init?.method).toBe("GET");
+        expect(captured.init?.headers).toMatchObject({
+            authorization: "Bearer secret",
+            "x-scope": "request",
+        });
+        expect(models).toEqual([
+            {
+                provider: "local",
+                id: "gpt-test",
+                name: "GPT Test",
+                ownedBy: "openai",
+                created: 1_700_000_000,
+                raw: {
+                    id: "gpt-test",
+                    name: "GPT Test",
+                    owned_by: "openai",
+                    created: 1_700_000_000,
+                    extra: true,
+                },
+            },
+        ]);
+    });
+
+    test("maps authentication failures", async () => {
+        const provider = openAICompatible({
+            id: "local",
+            baseURL: "http://host/v1",
+            fetch: async () =>
+                new Response(JSON.stringify({ error: { message: "bad key" } }), { status: 401 }),
+        });
+        await expect(provider.listModels()).rejects.toBeInstanceOf(AuthError);
+    });
+
+    test("throws when data is missing", async () => {
+        const provider = openAICompatible({
+            id: "local",
+            baseURL: "http://host/v1",
+            fetch: async () => Response.json({ object: "list" }),
+        });
+        await expect(provider.listModels()).rejects.toBeInstanceOf(ProviderError);
+    });
+
+    test("rethrows an aborted signal rather than wrapping it", async () => {
+        const controller = new AbortController();
+        controller.abort();
+        const provider = openAICompatible({
+            id: "local",
+            baseURL: "http://host/v1",
+            fetch: async (_url, init) => {
+                init?.signal?.throwIfAborted();
+                return Response.json({ data: [] });
+            },
+        });
+        await expect(provider.listModels({ abortSignal: controller.signal })).rejects.toMatchObject({
+            name: "AbortError",
+        });
+    });
+});
+
 function modelReturning(response: Response) {
     return openAICompatible({
         id: "local",

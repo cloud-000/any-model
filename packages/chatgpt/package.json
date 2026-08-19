@@ -1,6 +1,6 @@
 {
     "name": "@any-model/chatgpt",
-    "version": "0.1.1",
+    "version": "0.1.3",
     "license": "MIT",
     "type": "module",
     "description": "Experimental ChatGPT OAuth and Codex-compatible provider for any-model.",

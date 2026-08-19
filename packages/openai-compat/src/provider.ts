@@ -8,7 +8,9 @@ import {
     createLanguageModel,
     type Capabilities,
     type GenerateRequest,
+    type ListModelsOptions,
     type Message,
+    type ModelInfo,
     type Provider,
     type StreamPart,
     type ToolChoice,
@@ -17,6 +19,8 @@ import {
 import type {
     OpenAIChatCompletionChunk,
     OpenAIChatCompletionRequest,
+    OpenAIModel,
+    OpenAIModelsListResponse,
     OpenAIToolCallDelta,
 } from "./wire.ts";
 
@@ -46,7 +50,9 @@ const DEFAULT_CAPABILITIES: Capabilities = {
 export function openAICompatible(config: OpenAICompatibleConfig): Provider {
     if (!config.id) throw new TypeError("OpenAI-compatible provider id is required.");
     if (!config.baseURL) throw new TypeError("OpenAI-compatible baseURL is required.");
-    const endpoint = `${config.baseURL.replace(/\/+$/, "")}/chat/completions`;
+    const baseURL = config.baseURL.replace(/\/+$/, "");
+    const endpoint = `${baseURL}/chat/completions`;
+    const modelsEndpoint = `${baseURL}/models`;
     const fetchImpl = config.fetch ?? globalThis.fetch;
     const capabilities = { ...DEFAULT_CAPABILITIES, ...config.capabilities };
 
@@ -67,6 +73,8 @@ export function openAICompatible(config: OpenAICompatibleConfig): Provider {
                     }),
             });
         },
+        listModels: (options) =>
+            listModels({ config, fetchImpl, modelsEndpoint, options }),
     };
 }
 
@@ -113,6 +121,71 @@ async function* streamCompletion(input: {
     }
 
     yield* normalizeChunks(parseSSE(response.body, input.config.id), input.config.id);
+}
+
+async function listModels(input: {
+    config: OpenAICompatibleConfig;
+    fetchImpl: FetchFunction;
+    modelsEndpoint: string;
+    options?: ListModelsOptions;
+}): Promise<readonly ModelInfo[]> {
+    const headers: Record<string, string> = {
+        ...input.config.headers,
+        ...input.options?.headers,
+    };
+    if (input.config.apiKey && !hasHeader(headers, "authorization")) {
+        headers.authorization = `Bearer ${input.config.apiKey}`;
+    }
+
+    let response: Response;
+    try {
+        response = await input.fetchImpl(input.modelsEndpoint, {
+            method: "GET",
+            headers,
+            signal: input.options?.abortSignal,
+        });
+    } catch (error) {
+        if (input.options?.abortSignal?.aborted || isAbortError(error)) throw error;
+        throw new ProviderError("OpenAI-compatible models request failed.", {
+            provider: input.config.id,
+            cause: error,
+            isRetryable: true,
+        });
+    }
+
+    if (!response.ok) throw await errorFromResponse(response, input.config.id);
+
+    let payload: OpenAIModelsListResponse;
+    try {
+        payload = (await response.json()) as OpenAIModelsListResponse;
+    } catch (error) {
+        throw new ProviderError("OpenAI-compatible models response was not JSON.", {
+            provider: input.config.id,
+            cause: error,
+            statusCode: response.status,
+        });
+    }
+    if (!Array.isArray(payload.data)) {
+        throw new ProviderError("OpenAI-compatible models response was missing data.", {
+            provider: input.config.id,
+            statusCode: response.status,
+            raw: payload,
+        });
+    }
+
+    return payload.data.flatMap((raw) => {
+        const info = toModelInfo(input.config.id, raw);
+        return info ? [info] : [];
+    });
+}
+
+function toModelInfo(provider: string, raw: OpenAIModel): ModelInfo | undefined {
+    if (typeof raw.id !== "string" || !raw.id) return undefined;
+    const info: ModelInfo = { provider, id: raw.id, raw };
+    if (typeof raw.name === "string") info.name = raw.name;
+    if (typeof raw.owned_by === "string") info.ownedBy = raw.owned_by;
+    if (typeof raw.created === "number") info.created = raw.created;
+    return info;
 }
 
 export function makeRequestBody(

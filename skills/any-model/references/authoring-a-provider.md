@@ -77,6 +77,8 @@ export function myProvider(config: MyConfig): Provider {
                 doStream: (request) => streamCompletion({ config, fetchImpl, modelId, request }),
             });
         },
+        // Live GET /models, or unsupportedListModels("my-provider") if the vendor has none.
+        listModels: (options) => listModels({ config, fetchImpl, options }),
     };
 }
 
@@ -86,7 +88,10 @@ export function myProviderOptions(options: MyOptions): ProviderOptions {
 ```
 
 Validate config in the factory (throw `TypeError`), resolve `fetch` and capabilities once, and
-keep `languageModel` cheap — it's called per model id.
+keep `languageModel` cheap — it's called per model id. `listModels` is required on the
+contract; throw `UnsupportedFeatureError("listModels")` via `unsupportedListModels(id)` when
+the vendor has no list API. Keep `ModelInfo` thin (`provider`, `id`, optional `name` /
+`ownedBy` / `created`) and put vendor extras on `raw`.
 
 ## `doStream`
 
@@ -176,6 +181,8 @@ date into `retryAfterMs`. Errors that arrive *inside* the stream are yielded as
 3. **Error mapping** — one case per class, asserting `instanceof`, `statusCode`, and
    `retryAfterMs`.
 4. **Abort** — an aborted signal rethrows the `AbortError` rather than a `ProviderError`.
+5. **listModels** — if the vendor has a list API, fake `fetch` and assert URL, mapping, and
+   error classes; otherwise assert `UnsupportedFeatureError` with `feature === "listModels"`.
 
 Live tests against the real API go in `test/live.test.ts`, gated on an env key
 (see `packages/openrouter/test/live.test.ts`).

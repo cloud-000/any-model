@@ -9,7 +9,9 @@ import {
     type AssistantContentPart,
     type Capabilities,
     type GenerateRequest,
+    type ListModelsOptions,
     type Message,
+    type ModelInfo,
     type Provider,
     type ProviderMetadata,
     type ProviderOptions,
@@ -22,6 +24,8 @@ import type {
     GoogleInteraction,
     GoogleInteractionEvent,
     GoogleInteractionRequest,
+    GoogleListModelsResponse,
+    GoogleModel,
 } from "./wire.ts";
 
 const GOOGLE_ID = "google";
@@ -67,7 +71,9 @@ const DEFAULT_CAPABILITIES: Capabilities = {
 
 export function google(config: GoogleConfig): Provider {
     if (!config?.apiKey) throw new TypeError("Google apiKey is required.");
-    const endpoint = `${(config.baseURL ?? DEFAULT_BASE_URL).replace(/\/+$/, "")}/interactions?alt=sse`;
+    const baseURL = (config.baseURL ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+    const endpoint = `${baseURL}/interactions?alt=sse`;
+    const modelsEndpoint = `${baseURL}/models`;
     const fetchImpl = config.fetch ?? globalThis.fetch;
     const capabilities = { ...DEFAULT_CAPABILITIES, ...config.capabilities };
 
@@ -82,11 +88,93 @@ export function google(config: GoogleConfig): Provider {
                     streamInteraction({ config, endpoint, fetchImpl, modelId, request }),
             });
         },
+        listModels: (options) =>
+            listGoogleModels({ config, fetchImpl, modelsEndpoint, options }),
     };
 }
 
 export function googleOptions(options: GoogleOptions): ProviderOptions {
     return { google: options };
+}
+
+const MAX_MODEL_PAGES = 20;
+
+async function listGoogleModels(input: {
+    config: GoogleConfig;
+    fetchImpl: FetchFunction;
+    modelsEndpoint: string;
+    options?: ListModelsOptions;
+}): Promise<readonly ModelInfo[]> {
+    const models: ModelInfo[] = [];
+    let pageToken: string | undefined;
+
+    for (let page = 0; page < MAX_MODEL_PAGES; page++) {
+        const url = new URL(input.modelsEndpoint);
+        url.searchParams.set("pageSize", "1000");
+        if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+        const headers: Record<string, string> = {
+            "x-goog-api-key": input.config.apiKey,
+            ...input.config.headers,
+            ...input.options?.headers,
+        };
+
+        let response: Response;
+        try {
+            response = await input.fetchImpl(url.toString(), {
+                method: "GET",
+                headers,
+                signal: input.options?.abortSignal,
+            });
+        } catch (error) {
+            if (input.options?.abortSignal?.aborted || isAbortError(error)) throw error;
+            throw new ProviderError("Google models.list request failed.", {
+                provider: GOOGLE_ID,
+                cause: error,
+                isRetryable: true,
+            });
+        }
+
+        if (!response.ok) throw await errorFromResponse(response);
+
+        let payload: GoogleListModelsResponse;
+        try {
+            payload = (await response.json()) as GoogleListModelsResponse;
+        } catch (error) {
+            throw new ProviderError("Google models.list response was not JSON.", {
+                provider: GOOGLE_ID,
+                cause: error,
+                statusCode: response.status,
+            });
+        }
+
+        const pageModels = payload.models ?? [];
+        if (!Array.isArray(pageModels)) {
+            throw new ProviderError("Google models.list response was missing models.", {
+                provider: GOOGLE_ID,
+                statusCode: response.status,
+                raw: payload,
+            });
+        }
+        for (const raw of pageModels) {
+            const info = toGoogleModelInfo(raw);
+            if (info) models.push(info);
+        }
+
+        if (typeof payload.nextPageToken !== "string" || !payload.nextPageToken) return models;
+        pageToken = payload.nextPageToken;
+    }
+
+    throw new ProviderError("Google models.list exceeded page limit.", { provider: GOOGLE_ID });
+}
+
+function toGoogleModelInfo(raw: GoogleModel): ModelInfo | undefined {
+    if (typeof raw.name !== "string" || !raw.name) return undefined;
+    const id = raw.name.startsWith("models/") ? raw.name.slice("models/".length) : raw.name;
+    if (!id) return undefined;
+    const info: ModelInfo = { provider: GOOGLE_ID, id, raw };
+    if (typeof raw.displayName === "string") info.name = raw.displayName;
+    return info;
 }
 
 async function* streamInteraction(input: {

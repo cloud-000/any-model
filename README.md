@@ -47,6 +47,9 @@ capability quirks. `any-model` does it once, with two goals:
 - **Provider plugins are a contract, not magic.** A provider is a factory returning an
   object that satisfies the core `Provider` interface. Explicit registration keeps
   everything tree-shakeable and type-safe — no auto-discovery, no reflection.
+- **Live model listing.** `provider.listModels()` / `registry.listModels()` hits the
+  vendor's models API and returns thin `ModelInfo` rows. Catalog metadata (context
+  window, pricing) stays a separate data package.
 - **One streaming event type.** Every provider normalizes to the same `StreamPart`
   discriminated union (`text-delta`, `reasoning-delta`, tool-call events, `finish`, …).
   Non-streaming `generate()` is just the stream folded into a final result — providers

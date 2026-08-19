@@ -1,6 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { createRegistry } from "./index.ts";
 import { mockProvider, streamToolCall } from "@any-model/testing";
+import {
+    AuthError,
+    UnsupportedFeatureError,
+    createLanguageModel,
+    createRegistry,
+    unsupportedListModels,
+    type Capabilities,
+    type Provider,
+    type StreamPart,
+} from "./index.ts";
 
 describe("registry", () => {
     test("resolves a model by 'providerId:modelId'", () => {
@@ -24,6 +33,61 @@ describe("registry", () => {
     test.each(["", "mock", "mock:", ":x"])("throws for malformed id %p", (id) => {
         const ai = createRegistry().use(mockProvider());
         expect(() => ai.languageModel(id)).toThrow();
+    });
+
+    test("listModels(providerId) returns that provider's models", async () => {
+        const ai = createRegistry()
+            .use(mockProvider({ id: "a", models: ["one"] }))
+            .use(mockProvider({ id: "b", models: ["two"] }));
+        expect(await ai.listModels("b")).toEqual([{ provider: "b", id: "two" }]);
+    });
+
+    test("listModels() concatenates every registered provider", async () => {
+        const ai = createRegistry()
+            .use(mockProvider({ id: "a", models: ["one"] }))
+            .use(mockProvider({ id: "b", models: ["two", "three"] }));
+        expect(await ai.listModels()).toEqual([
+            { provider: "a", id: "one" },
+            { provider: "b", id: "two" },
+            { provider: "b", id: "three" },
+        ]);
+    });
+
+    test("listModels() skips UnsupportedFeatureError", async () => {
+        const ai = createRegistry()
+            .use(mockProvider({ id: "ok", models: ["keep"] }))
+            .use(stubProvider("none", unsupportedListModels("none")));
+        expect(await ai.listModels()).toEqual([{ provider: "ok", id: "keep" }]);
+    });
+
+    test("listModels() propagates errors other than UnsupportedFeatureError", async () => {
+        const ai = createRegistry()
+            .use(mockProvider({ id: "ok", models: ["keep"] }))
+            .use(
+                stubProvider("auth", async () => {
+                    throw new AuthError("nope", { provider: "auth" });
+                }),
+            );
+        await expect(ai.listModels()).rejects.toBeInstanceOf(AuthError);
+    });
+
+    test("listModels(providerId) does not skip UnsupportedFeatureError", async () => {
+        const ai = createRegistry().use(stubProvider("none", unsupportedListModels("none")));
+        await expect(ai.listModels("none")).rejects.toBeInstanceOf(UnsupportedFeatureError);
+        await expect(ai.listModels("missing")).rejects.toThrow(/Unknown provider/);
+    });
+
+    test("mock listModels defaults to echo and accepts configured ids", async () => {
+        expect(await mockProvider().listModels()).toEqual([{ provider: "mock", id: "echo" }]);
+        expect(
+            await mockProvider({
+                id: "local",
+                models: ["a", { id: "b", name: "Bee", ownedBy: "me" }],
+            }).listModels(),
+        ).toEqual([
+            { provider: "local", id: "a" },
+            { provider: "local", id: "b", name: "Bee", ownedBy: "me" },
+        ]);
     });
 });
 
@@ -69,3 +133,31 @@ describe("end-to-end generate/stream", () => {
         expect(result.content.at(-1)?.type).toBe("tool-call");
     });
 });
+
+const STUB_CAPABILITIES: Capabilities = {
+    streaming: true,
+    tools: false,
+    vision: false,
+    jsonSchema: false,
+    reasoning: false,
+    promptCaching: false,
+};
+
+async function* emptyStream(): AsyncIterable<StreamPart> {
+    yield { type: "finish", finishReason: "stop", usage: {} };
+}
+
+function stubProvider(id: string, listModels: Provider["listModels"]): Provider {
+    return {
+        id,
+        languageModel(modelId) {
+            return createLanguageModel({
+                provider: id,
+                modelId,
+                capabilities: STUB_CAPABILITIES,
+                doStream: emptyStream,
+            });
+        },
+        listModels,
+    };
+}

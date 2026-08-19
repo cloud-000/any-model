@@ -4,9 +4,16 @@
  * implement streaming only — {@link createLanguageModel} derives `generate()`
  * by folding the stream.
  */
+import { UnsupportedFeatureError } from "./errors.ts";
 import { foldStream, type StreamPart } from "./stream.ts";
 import { toWireTools } from "./tool.ts";
-import type { Capabilities, GenerateRequest, GenerateResult } from "./types.ts";
+import type {
+    Capabilities,
+    GenerateRequest,
+    GenerateResult,
+    ListModelsOptions,
+    ModelInfo,
+} from "./types.ts";
 
 export interface LanguageModel {
     readonly provider: string;
@@ -20,6 +27,21 @@ export interface Provider {
     /** Stable id used as the prefix in "providerId:modelId". */
     readonly id: string;
     languageModel(modelId: string): LanguageModel;
+    /**
+     * Live vendor listing for this configured instance. Cheap `languageModel()`
+     * stays unvalidated; this is opt-in discovery, not a gate.
+     */
+    listModels(options?: ListModelsOptions): Promise<readonly ModelInfo[]>;
+}
+
+/**
+ * `listModels` implementation for providers with no list API. Always throws
+ * {@link UnsupportedFeatureError}.
+ */
+export function unsupportedListModels(provider: string): Provider["listModels"] {
+    return async () => {
+        throw new UnsupportedFeatureError("listModels", { provider });
+    };
 }
 
 export interface LanguageModelSpec {

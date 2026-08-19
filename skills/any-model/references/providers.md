@@ -41,6 +41,9 @@ Behavior worth knowing:
 - Reasoning comes from either `delta.reasoning_content` or `delta.reasoning`.
 - Every raw SSE chunk is also emitted as a `raw` part.
 - `FilePart` input throws `UnsupportedFeatureError("file input")`.
+- `listModels()` is `GET {baseURL}/models`. Rows map to thin `ModelInfo` (`id`, optional
+  `name` / `ownedBy` / `created`); vendor extras stay on `raw`. Embeddings and other
+  non-chat models are not filtered out.
 
 Also exports `makeRequestBody(providerId, modelId, request)` and the wire types
 `OpenAIChatCompletionRequest` / `OpenAIChatCompletionChunk` — used by tests and by providers
@@ -91,7 +94,8 @@ model.stream({
 interface has an index signature, so new OpenRouter fields work before the types catch up.
 The factory is a thin wrapper: it builds an `OpenAICompatibleConfig` (id `openrouter`,
 `reasoning: true`, attribution headers merged before `config.headers`) and returns
-`openAICompatible(...)` — so all openai-compat behavior above applies here too.
+`openAICompatible(...)` — so all openai-compat behavior above applies here too, including
+`listModels()` against `https://openrouter.ai/api/v1/models`.
 
 ## `@any-model/google`
 
@@ -116,6 +120,8 @@ model.generate({
 
 Config: `apiKey` (required), `baseURL`, `headers`, `capabilities`, `fetch`. Also exports
 `makeRequestBody(modelId, request)` and the `GoogleInteraction*` wire types.
+`listModels()` is `GET {baseURL}/models` with paging; listed ids have the `models/` prefix
+stripped so they round-trip through `languageModel()`.
 
 ## `@any-model/chatgpt` (experimental)
 
@@ -143,7 +149,9 @@ await credentialStore.clear();                                  // logout is cal
 `chatGPTOptions({ reasoning: {...}, include: ["…"] })` maps to native Responses fields. Config
 is `credentialStore` (required), `baseURL`, `headers`, `capabilities`, `fetch`. This backend
 rejects several normalized options — `temperature`, `topP`, `stopSequences`, `responseFormat`,
-and `FilePart` input all throw `UnsupportedFeatureError`. Per-tool strictness is supported via
+and `FilePart` input all throw `UnsupportedFeatureError`. `listModels()` throws
+`UnsupportedFeatureError("listModels")` — this backend has no public list API. Per-tool
+strictness is supported via
 `providerOptions: { chatgpt: { strict: true } }` on either the request or an individual tool.
 Credential storage, login UX, and logout are all application-owned: implement
 `ChatGPTCredentialStore` yourself for anything beyond a process-lifetime store.
@@ -157,14 +165,16 @@ mockProvider({
     id: "mock",                            // default "mock"
     capabilities: { reasoning: true },
     respond: (request, modelId) => "hi",   // string | StreamPart[] | AsyncIterable<StreamPart>
+    models: ["echo", { id: "tools", name: "Tools" }], // listModels(); default [{ id: "echo" }]
 });
 
 streamText("hello world", { chunkSize: 4 });           // text deltas + finish
 streamToolCall("get_weather", { city: "SF" }, { toolCallId: "call_1" }); // start/delta/end + finish
 ```
 
-Default `respond` echoes the last user text. Because it implements only `doStream`, this
-package is also the reference example of the minimum a provider must do.
+Default `respond` echoes the last user text. Because it implements only `doStream` plus a
+canned `listModels()`, this package is also the reference example of the minimum a provider
+must do.
 
 ## Multi-provider registries
 

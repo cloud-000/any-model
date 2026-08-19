@@ -1,6 +1,6 @@
 {
     "name": "@any-model/testing",
-    "version": "0.1.1",
+    "version": "0.1.3",
     "license": "MIT",
     "type": "module",
     "description": "Mock and record-replay providers for testing any-model applications.",

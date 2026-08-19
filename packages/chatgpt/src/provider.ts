@@ -6,6 +6,7 @@ import {
     RateLimitError,
     UnsupportedFeatureError,
     createLanguageModel,
+    unsupportedListModels,
     type AssistantContentPart,
     type Capabilities,
     type GenerateRequest,
@@ -72,6 +73,7 @@ export function chatGPT(config: ChatGPTConfig): Provider {
                     streamResponse({ config, endpoint, fetchImpl, auth, modelId, request }),
             });
         },
+        listModels: unsupportedListModels(CHATGPT_ID),
     };
 }
 
